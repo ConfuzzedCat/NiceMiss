@@ -21,8 +21,8 @@ namespace NiceMiss
         {
             Instance = this;
             log = logger;
-            zenjector.OnMenu<NiceMissMenuInstaller>();
-            zenjector.OnGame<NiceMissGameInstaller>(false);
+            zenjector.Install<NiceMissMenuInstaller>(Location.Menu);
+            zenjector.Install<NiceMissGameInstaller>(Location.GameCore);
         }
 
         [Init]

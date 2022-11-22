@@ -2,6 +2,7 @@
 using UnityEngine;
 using NiceMiss.Configuration;
 using IPA.Utilities;
+using System;
 
 namespace NiceMiss
 {

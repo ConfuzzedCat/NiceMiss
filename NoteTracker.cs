@@ -9,30 +9,47 @@ namespace NiceMiss
         internal static Dictionary<IDifficultyBeatmap, Dictionary<NoteData, Rating>> mapData = new Dictionary<IDifficultyBeatmap, Dictionary<NoteData, Rating>>();
 
         private readonly IDifficultyBeatmap difficultyBeatmap;
-        private readonly ScoreController scoreController;
+        private readonly BeatmapObjectManager beatmapObjectManager;
         private Dictionary<NoteData, Rating> currentMapData;
-        private Dictionary<ISaberSwingRatingCounter, NoteCutInfo> swingCounterCutInfo;
+        private Dictionary<int, NoteCutInfo> swingCounterCutInfo;
         private Dictionary<NoteCutInfo, NoteData> noteCutInfoData;
+        private int noteInt;
 
-        public NoteTracker(IDifficultyBeatmap difficultyBeatmap, ScoreController scoreController)
+        public NoteTracker(IDifficultyBeatmap difficultyBeatmap, BeatmapObjectManager beatmapObjectManager)
         {
             this.difficultyBeatmap = difficultyBeatmap;
-            this.scoreController = scoreController;
+            this.beatmapObjectManager = beatmapObjectManager;
         }
+
 
         public void Initialize()
         {
-            scoreController.noteWasMissedEvent += ScoreController_noteWasMissedEvent;
-            scoreController.noteWasCutEvent += ScoreController_noteWasCutEvent;
+            beatmapObjectManager.noteWasMissedEvent += BeatmapObjectManager_noteWasMissedEvent;
+            beatmapObjectManager.noteWasCutEvent += BeatmapObjectManager_noteWasCutEvent;
             currentMapData = new Dictionary<NoteData, Rating>();
-            swingCounterCutInfo = new Dictionary<ISaberSwingRatingCounter, NoteCutInfo>();
+            swingCounterCutInfo = new Dictionary<int, NoteCutInfo >();
             noteCutInfoData = new Dictionary<NoteCutInfo, NoteData>();
+            noteInt = 0;
+        }
+
+        private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
+        {
+            noteInt += 1;
+            Plugin.log.Debug($"noteInt: {noteInt}");
+            ScoreController_noteWasCutEvent(noteController.noteData, in noteCutInfo, 1);
+        }
+
+        private void BeatmapObjectManager_noteWasMissedEvent(NoteController obj)
+        {
+            noteInt += 1;
+            Plugin.log.Debug($"noteInt: {noteInt}");
+            ScoreController_noteWasMissedEvent(obj.noteData, 1);
         }
 
         public void Dispose()
         {
-            scoreController.noteWasMissedEvent -= ScoreController_noteWasMissedEvent;
-            scoreController.noteWasCutEvent -= ScoreController_noteWasCutEvent;
+            beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
+            beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
             mapData[difficultyBeatmap] = currentMapData;
             Plugin.log.Debug(currentMapData.ToString());
         }
@@ -50,40 +67,49 @@ namespace NiceMiss
             }
             else
             {
-                swingCounterCutInfo.Add(noteCutInfo.swingRatingCounter, noteCutInfo);
+                swingCounterCutInfo.Add(noteInt, noteCutInfo);
                 noteCutInfoData.Add(noteCutInfo, noteData);
-                noteCutInfo.swingRatingCounter.RegisterDidChangeReceiver(this);
-                noteCutInfo.swingRatingCounter.RegisterDidFinishReceiver(this);
-                int beforeCutRawScore, afterCutRawScore, cutDistanceRawScore;
-                ScoreModel.RawScoreWithoutMultiplier(noteCutInfo.swingRatingCounter, noteCutInfo.cutDistanceToCenter, out beforeCutRawScore, out afterCutRawScore, out cutDistanceRawScore);
-                int angle = beforeCutRawScore + afterCutRawScore;
-                currentMapData[noteData] = new Rating(angle, cutDistanceRawScore);
+                CutScoreBuffer cutScoreBuffer = new CutScoreBuffer();
+                cutScoreBuffer.Init(noteCutInfo);
+                //noteCutInfo.swingRatingCounter.RegisterDidChangeReceiver(this);
+                //noteCutInfo.swingRatingCounter.RegisterDidFinishReceiver(this);
+                //int beforeCutRawScore, afterCutRawScore, cutDistanceRawScore;
+                //ScoreModel.RawScoreWithoutMultiplier(noteCutInfo.swingRatingCounter, noteCutInfo.cutDistanceToCenter, out beforeCutRawScore, out afterCutRawScore, out cutDistanceRawScore);
+                int angle = cutScoreBuffer.beforeCutScore + cutScoreBuffer.afterCutScore;
+                Plugin.log.Debug($"noteCuteInfo.cutAngle: {noteCutInfo.cutAngle} - angleCutScoreBuffer: {angle}");
+                int acc = cutScoreBuffer.centerDistanceCutScore;
+                currentMapData[noteData] = new Rating(angle, acc);
+
             }
         }
 
+
         public void HandleSaberSwingRatingCounterDidChange(ISaberSwingRatingCounter saberSwingRatingCounter, float rating)
         {
-            int beforeCutRawScore, afterCutRawScore, cutDistanceRawScore;
+
             NoteCutInfo noteCutInfo;
-            if (swingCounterCutInfo.TryGetValue(saberSwingRatingCounter, out noteCutInfo))
+
+            if (swingCounterCutInfo.TryGetValue(noteInt, out noteCutInfo))
             {
-                ScoreModel.RawScoreWithoutMultiplier(saberSwingRatingCounter, noteCutInfo.cutDistanceToCenter, out beforeCutRawScore, out afterCutRawScore, out cutDistanceRawScore);
-                int angle = beforeCutRawScore + afterCutRawScore;
+                CutScoreBuffer cutScoreBuffer = new CutScoreBuffer();
+                cutScoreBuffer.Init(noteCutInfo);
+                int angle = cutScoreBuffer.beforeCutScore + cutScoreBuffer.afterCutScore;
                 NoteData noteData;
                 if (noteCutInfoData.TryGetValue(noteCutInfo, out noteData))
                 {
-                    currentMapData[noteData] = new Rating(angle, cutDistanceRawScore);
+                    currentMapData[noteData] = new Rating(angle, cutScoreBuffer.centerDistanceCutScore);
                 }
             }
         }
 
+
         public void HandleSaberSwingRatingCounterDidFinish(ISaberSwingRatingCounter saberSwingRatingCounter)
         {
-            swingCounterCutInfo.Remove(saberSwingRatingCounter);
+            Plugin.log.Debug($"Removing noteInt: {noteInt}");
+            swingCounterCutInfo.Remove(noteInt);
             saberSwingRatingCounter.UnregisterDidChangeReceiver(this);
             saberSwingRatingCounter.UnregisterDidFinishReceiver(this);
         }
-
         public struct Rating
         {
             public Rating(int angle, int accuracy)

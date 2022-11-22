@@ -3,13 +3,13 @@
   "id": "NiceMiss",
   "name": "NiceMiss",
   "author": "Kyle 1413",
-  "version": "0.5.0",
-  "description": "Points out notes that were missed on a previous playthrough of a song",
-  "gameVersion": "1.16.1",
+  "version": "0.6.0",
+  "description": "Points out notes that were missed on a previous playthrough of a song. 'Updated' by ConfuzzedCat",
+  "gameVersion": "1.26.0",
   "dependsOn": {
-    "BSIPA": "^4.1.0",
-    "BeatSaberMarkupLanguage": "^1.4.0",
-    "SiraUtil": "^2.5.5"
+    "BSIPA": "^4.2.2",
+    "BeatSaberMarkupLanguage": "^1.6.8",
+    "SiraUtil": "^3.1.2"
   }
 
 }
