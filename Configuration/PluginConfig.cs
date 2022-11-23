@@ -13,7 +13,7 @@ namespace NiceMiss.Configuration
     {
         public static PluginConfig Instance { get; set; }
         public event Action ConfigChanged;
-        public virtual bool Enabled { get; set; } = false;
+        public virtual bool Enabled { get; set; } = true;
 
         [UseConverter(typeof(EnumConverter<ModeEnum>))]
         public virtual ModeEnum Mode { get; set; } = ModeEnum.Multiplier;

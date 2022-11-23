@@ -179,6 +179,7 @@
     <EmbeddedResource Include="UI\modifierUI.bsml" />
     <EmbeddedResource Include="QuickOutline\Resources\outlineBundle" />
     <EmbeddedResource Include="UI\hitscoreModal.bsml" />
+    <None Include="Todo.md" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
