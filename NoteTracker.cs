@@ -6,18 +6,19 @@ namespace NiceMiss
 {
     public class NoteTracker : IInitializable, IDisposable, ISaberSwingRatingCounterDidChangeReceiver, ISaberSwingRatingCounterDidFinishReceiver
     {
-        internal static Dictionary<IDifficultyBeatmap, Dictionary<NoteData, Rating>> mapData = new Dictionary<IDifficultyBeatmap, Dictionary<NoteData, Rating>>();
+        internal static Dictionary<string, Dictionary<string, Rating>> mapData = new Dictionary<string, Dictionary<string, Rating>>();
 
-        private readonly IDifficultyBeatmap difficultyBeatmap;
+        private IDifficultyBeatmap difficultyBeatmap;
         private readonly BeatmapObjectManager beatmapObjectManager;
-        private Dictionary<NoteData, Rating> currentMapData;
+        private Dictionary<string, Rating> currentMapData;
         private Dictionary<int, NoteCutInfo> swingCounterCutInfo;
         private Dictionary<NoteCutInfo, NoteData> noteCutInfoData;
-        private int noteInt;
+        private static int noteInt;
 
         public NoteTracker(IDifficultyBeatmap difficultyBeatmap, BeatmapObjectManager beatmapObjectManager)
         {
             this.difficultyBeatmap = difficultyBeatmap;
+
             this.beatmapObjectManager = beatmapObjectManager;
         }
 
@@ -26,23 +27,20 @@ namespace NiceMiss
         {
             beatmapObjectManager.noteWasMissedEvent += BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent += BeatmapObjectManager_noteWasCutEvent;
-            currentMapData = new Dictionary<NoteData, Rating>();
-            swingCounterCutInfo = new Dictionary<int, NoteCutInfo >();
+            currentMapData = new Dictionary<string, Rating>();
+            swingCounterCutInfo = new Dictionary<int, NoteCutInfo>();
             noteCutInfoData = new Dictionary<NoteCutInfo, NoteData>();
             noteInt = 0;
         }
 
         private void BeatmapObjectManager_noteWasCutEvent(NoteController noteController, in NoteCutInfo noteCutInfo)
         {
-            noteInt += 1;
-            Plugin.log.Debug($"noteInt: {noteInt}");
+
             ScoreController_noteWasCutEvent(noteController.noteData, in noteCutInfo, 1);
         }
 
         private void BeatmapObjectManager_noteWasMissedEvent(NoteController obj)
         {
-            noteInt += 1;
-            Plugin.log.Debug($"noteInt: {noteInt}");
             ScoreController_noteWasMissedEvent(obj.noteData, 1);
         }
 
@@ -50,20 +48,44 @@ namespace NiceMiss
         {
             beatmapObjectManager.noteWasMissedEvent -= BeatmapObjectManager_noteWasMissedEvent;
             beatmapObjectManager.noteWasCutEvent -= BeatmapObjectManager_noteWasCutEvent;
-            mapData[difficultyBeatmap] = currentMapData;
+            mapData[difficultyBeatmap.SerializedName()] = currentMapData;
             Plugin.log.Debug(currentMapData.ToString());
         }
 
         private void ScoreController_noteWasMissedEvent(NoteData noteData, int _)
         {
-            currentMapData[noteData] = new Rating(true);
+            if (noteData == null)
+            {
+                Plugin.log.Critical("NoteData is null");
+            }
+            NoteDataBypasser bypasser = noteData.NoteDataToBypasser();
+            if (bypasser == null)
+            {
+                Plugin.log.Critical("Bypasser is null");
+            }
+            currentMapData[bypasser.Serialize()] = new Rating(true);
+        }
+
+        internal static void LogBlockInt()
+        {
+            noteInt += 1;
+            Plugin.log.Debug($"noteInt: {noteInt}");
         }
 
         private void ScoreController_noteWasCutEvent(NoteData noteData, in NoteCutInfo noteCutInfo, int multiplier)
         {
             if (noteData.colorType != ColorType.None && !noteCutInfo.allIsOK)
             {
-                currentMapData[noteData] = new Rating(true);
+                if (noteData == null)
+                {
+                    Plugin.log.Critical("NoteData is null");
+                }
+                NoteDataBypasser bypasser = noteData.NoteDataToBypasser();
+                if (bypasser == null)
+                {
+                    Plugin.log.Critical("Bypasser is null");
+                }
+                currentMapData[bypasser.Serialize()] = new Rating(true);
             }
             else
             {
@@ -78,7 +100,16 @@ namespace NiceMiss
                 int angle = cutScoreBuffer.beforeCutScore + cutScoreBuffer.afterCutScore;
                 Plugin.log.Debug($"noteCuteInfo.cutAngle: {noteCutInfo.cutAngle} - angleCutScoreBuffer: {angle}");
                 int acc = cutScoreBuffer.centerDistanceCutScore;
-                currentMapData[noteData] = new Rating(angle, acc);
+                if (noteData == null)
+                {
+                    Plugin.log.Critical("NoteData is null");
+                }
+                NoteDataBypasser bypasser = noteData.NoteDataToBypasser();
+                if (bypasser == null)
+                {
+                    Plugin.log.Critical("Bypasser is null");
+                }
+                currentMapData[bypasser.Serialize()] = new Rating(angle, acc);
 
             }
         }
@@ -97,7 +128,16 @@ namespace NiceMiss
                 NoteData noteData;
                 if (noteCutInfoData.TryGetValue(noteCutInfo, out noteData))
                 {
-                    currentMapData[noteData] = new Rating(angle, cutScoreBuffer.centerDistanceCutScore);
+                    if (noteData == null)
+                    {
+                        Plugin.log.Critical("NoteData is null");
+                    }
+                    NoteDataBypasser bypasser = noteData.NoteDataToBypasser();
+                    if (bypasser == null)
+                    {
+                        Plugin.log.Critical("Bypasser is null");
+                    }
+                    currentMapData[bypasser.Serialize()] = new Rating(angle, cutScoreBuffer.centerDistanceCutScore);
                 }
             }
         }
@@ -126,6 +166,10 @@ namespace NiceMiss
                 angle = 0;
                 accuracy = 0;
                 this.missed = missed;
+                if (missed)
+                {
+                    LogBlockInt();
+                }
             }
 
             public int hitScore;

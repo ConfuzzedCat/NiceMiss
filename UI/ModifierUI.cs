@@ -1,13 +1,13 @@
-﻿using System;
-using UnityEngine;
-using BeatSaberMarkupLanguage.Attributes;
-using Zenject;
-using BeatSaberMarkupLanguage.GameplaySetup;
-using System.ComponentModel;
-using NiceMiss.Configuration;
+﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
-using HMUI;
 using BeatSaberMarkupLanguage.Components.Settings;
+using BeatSaberMarkupLanguage.GameplaySetup;
+using HMUI;
+using NiceMiss.Configuration;
+using System;
+using System.ComponentModel;
+using UnityEngine;
+using Zenject;
 
 namespace NiceMiss.UI
 {

@@ -154,6 +154,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="NoteDataBypasser.cs" />
     <Compile Include="UI\SliderButton.cs" />
     <EmbeddedResource Include="QuickOutline\QuickOutline-License" />
     <Compile Include="Configuration\HitscoreColor.cs" />

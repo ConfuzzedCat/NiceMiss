@@ -1,12 +1,15 @@
-﻿using IPA;
-using IPALogger = IPA.Logging.Logger;
-using HarmonyLib;
-using System.Collections;
-using UnityEngine;
-using SiraUtil.Zenject;
-using NiceMiss.Installers;
+﻿using HarmonyLib;
+using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
+using Newtonsoft.Json;
+using NiceMiss.Installers;
+using SiraUtil.Zenject;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using IPALogger = IPA.Logging.Logger;
 
 namespace NiceMiss
 {
@@ -15,6 +18,7 @@ namespace NiceMiss
     {
         internal static Plugin Instance { get; private set; }
         internal static IPALogger log { get; set; }
+        internal string mapDataFilePath { get; private set; }
 
         [Init]
         public Plugin(IPALogger logger, Zenjector zenjector)
@@ -30,14 +34,26 @@ namespace NiceMiss
         {
             Configuration.PluginConfig.Instance = conf.Generated<Configuration.PluginConfig>();
             Plugin.log?.Debug("Config loaded");
+
         }
 
         [OnStart]
         public void OnApplicationStart()
         {
             var harmony = new Harmony("net.kyle1413.nicemiss");
-            harmony.PatchAll();            
-           SharedCoroutineStarter.instance.StartCoroutine(LoadQuickOutlineMaterials());
+            harmony.PatchAll();
+            mapDataFilePath = Path.Combine(Directory.GetCurrentDirectory(), "UserData", "NissMiss.MapData");
+            if (File.Exists(mapDataFilePath))
+            {
+                Dictionary<string, Dictionary<string, NoteTracker.Rating>> temp = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, NoteTracker.Rating>>>(File.ReadAllText(mapDataFilePath));
+                if (temp != null)
+                {
+                    NoteTracker.mapData = temp;
+                    log.Info("Loaded NiceMiss Map data");
+                }
+            }
+
+            SharedCoroutineStarter.instance.StartCoroutine(LoadQuickOutlineMaterials());
         }
 
         public IEnumerator LoadQuickOutlineMaterials()
@@ -49,6 +65,7 @@ namespace NiceMiss
             {
                 Plugin.log.Error("Failed To load QuickOutline Bundle");
                 yield break;
+
             }
             var fillMatRequest = quickOutlineBundle.LoadAssetAsync<Material>("OutlineFill");
             yield return fillMatRequest;
@@ -62,7 +79,7 @@ namespace NiceMiss
         [OnExit]
         public void OnApplicationQuit()
         {
-
+            File.WriteAllText(mapDataFilePath, JsonConvert.SerializeObject(NoteTracker.mapData));
         }
     }
 }

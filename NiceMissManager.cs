@@ -5,7 +5,7 @@ namespace NiceMiss
 {
     internal class NiceMissManager : IInitializable
     {
-        internal static Dictionary<NoteData, NoteTracker.Rating> currentMapData;
+        internal static Dictionary<string, NoteTracker.Rating> currentMapData;
         internal static bool modActive;
 
         private readonly NoteTracker noteTracker;
@@ -23,7 +23,7 @@ namespace NiceMiss
         {
             if (noteTracker != null && noteOutliner != null)
             {
-                if (NoteTracker.mapData.TryGetValue(difficultyBeatmap, out Dictionary<NoteData, NoteTracker.Rating> currentMapData))
+                if (NoteTracker.mapData.TryGetValue(difficultyBeatmap.SerializedName(), out Dictionary<string, NoteTracker.Rating> currentMapData))
                 {
                     NiceMissManager.currentMapData = currentMapData;
                     modActive = true;
