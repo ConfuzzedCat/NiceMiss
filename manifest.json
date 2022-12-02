@@ -3,9 +3,9 @@
   "id": "NiceMiss",
   "name": "NiceMiss",
   "author": "Kyle 1413 & ConfuzzedCat",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Points out notes that were missed on a previous playthrough of a song.",
-  "gameVersion": "1.26.0",
+  "gameVersion": "1.25.0",
   "dependsOn": {
     "BSIPA": "^4.2.2",
     "BeatSaberMarkupLanguage": "^1.6.8",

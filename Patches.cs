@@ -1,8 +1,7 @@
 ﻿using HarmonyLib;
-using UnityEngine;
-using NiceMiss.Configuration;
 using IPA.Utilities;
-using System;
+using NiceMiss.Configuration;
+using UnityEngine;
 
 namespace NiceMiss
 {
@@ -19,7 +18,7 @@ namespace NiceMiss
             var outline = ____noteController.gameObject.GetComponentInChildren<Outline>();
             if (outline == null)
             {
-          //      Debug.Log("Outline Not Found");
+                //      Debug.Log("Outline Not Found");
                 outline = ____noteController.gameObject.AddComponent<Outline>();
             }
 
@@ -47,8 +46,10 @@ namespace NiceMiss
 
         }
 
-        public static bool NotesEqual(NoteData one, NoteData other)
+        public static bool NotesEqual(string first, NoteData other)
         {
+            NoteDataBypasser bypasser = NoteDataBypasser.Deserialize(first);
+            NoteData one = bypasser.noteData;
             return one.colorType == other.colorType && one.cutDirection == other.cutDirection && one.flipYSide == other.flipYSide
                 && one.flipLineIndex == other.flipLineIndex && one.lineIndex == other.lineIndex && one.noteLineLayer == other.noteLineLayer
                 && one.time == other.time;

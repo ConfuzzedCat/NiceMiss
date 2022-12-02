@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using IPA.Config.Stores;
+﻿using IPA.Config.Stores;
 using IPA.Config.Stores.Attributes;
 using IPA.Config.Stores.Converters;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo(GeneratedStore.AssemblyVisibilityTarget)]
