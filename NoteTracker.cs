@@ -158,6 +158,7 @@ namespace NiceMiss
                 this.angle = angle;
                 this.accuracy = accuracy;
                 missed = false;
+                LogBlockInt();
             }
 
             public Rating(bool missed)
@@ -166,10 +167,8 @@ namespace NiceMiss
                 angle = 0;
                 accuracy = 0;
                 this.missed = missed;
-                if (missed)
-                {
-                    LogBlockInt();
-                }
+                LogBlockInt();
+
             }
 
             public int hitScore;
